@@ -12,7 +12,7 @@ Requirements
 
 Usage
 =====
-in project properties page click build and add : 
+in project properties page click build and add cmd-line like: 
 ```
 "D:\Develop\MS\AutoIncBuildNumber.exe" "$(ProjectDir)"
 ```
