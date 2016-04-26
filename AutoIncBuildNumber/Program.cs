@@ -35,35 +35,42 @@ namespace AutoIncBuildNumber
             string[] lineSeparators = new string[] {"\n\r", "\r\n", "\r", "\n"};
 
             string projectFolder = args[0].Trim(new char[] { '\"', ' '} );
-            string assemblyInfoSource = $@"{projectFolder}\Properties\AssemblyInfo.cs";
 
-            Console.WriteLine( assemblyInfoSource );
-            if ( File.Exists( assemblyInfoSource ) )
+            List<string> assemblyInfoSource = new List<string>();
+            assemblyInfoSource.Add( $@"{projectFolder}\Properties\AssemblyInfo.cs" );
+            assemblyInfoSource.Add( $@"{projectFolder}\AssemblyInfo.cs" );
+
+            foreach ( string assemblyInfoFile in assemblyInfoSource )
             {
-                string assemblyInfo = File.ReadAllText( assemblyInfoSource, Encoding.UTF8 );
-                string[] lines = assemblyInfo.Split(lineSeparators, StringSplitOptions.None);
+                if ( File.Exists( assemblyInfoFile ) )
+                {
+                    Console.WriteLine( assemblyInfoFile );
 
-                for ( int idx = 0; idx < lines.Length; idx++ )
-                {
-                    string line = lines[idx];
-                    if ( line.StartsWith( strAssemblyVersion ) &&
-                        line.EndsWith( strVersionEnd ) )
+                    string assemblyInfo = File.ReadAllText( assemblyInfoFile, Encoding.UTF8 );
+                    string[] lines = assemblyInfo.Split(lineSeparators, StringSplitOptions.None);
+
+                    for ( int idx = 0; idx < lines.Length; idx++ )
                     {
-                        string strVersion = line.Substring( strAssemblyVersion.Length, line.Length - strAssemblyVersion.Length - strVersionEnd.Length );
-                        lines[idx] = line.Replace( strVersion, incBuildNo( strVersion ) );
+                        string line = lines[idx];
+                        if ( line.StartsWith( strAssemblyVersion ) &&
+                            line.EndsWith( strVersionEnd ) )
+                        {
+                            string strVersion = line.Substring( strAssemblyVersion.Length, line.Length - strAssemblyVersion.Length - strVersionEnd.Length );
+                            lines[idx] = line.Replace( strVersion, incBuildNo( strVersion ) );
+                        }
+                        else if ( line.StartsWith( strAssemblyFileVersion ) &&
+                            line.EndsWith( strVersionEnd ) )
+                        {
+                            string strVersion = line.Substring( strAssemblyFileVersion.Length, line.Length - strAssemblyFileVersion.Length - strVersionEnd.Length );
+                            lines[idx] = line.Replace( strVersion, incBuildNo( strVersion ) );
+                        }
                     }
-                    else if ( line.StartsWith( strAssemblyFileVersion ) &&
-                        line.EndsWith( strVersionEnd ) )
+                    if ( string.IsNullOrEmpty( lines[lines.Length - 1] ) )
                     {
-                        string strVersion = line.Substring( strAssemblyFileVersion.Length, line.Length - strAssemblyFileVersion.Length - strVersionEnd.Length );
-                        lines[idx] = line.Replace( strVersion, incBuildNo( strVersion ) );
+                        lines = string.Join( "\r", lines ).Trim().Split( lineSeparators, StringSplitOptions.None );
                     }
+                    File.WriteAllLines( assemblyInfoFile, lines, Encoding.UTF8 );
                 }
-                if ( string.IsNullOrEmpty( lines[lines.Length - 1] ) )
-                {
-                    lines = string.Join( "\r", lines ).Trim().Split( lineSeparators, StringSplitOptions.None );
-                }
-                File.WriteAllLines( assemblyInfoSource, lines, Encoding.UTF8 );
             }
         }
     }
