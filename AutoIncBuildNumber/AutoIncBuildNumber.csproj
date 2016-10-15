@@ -47,7 +47,7 @@
     <PreBuildEvent>"D:\Develop\MS\AutoIncBuildNumber.exe" "$(ProjectDir)"</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>xcopy /Y $(TargetPath) "D:\Develop\MS"</PostBuildEvent>
+    <PostBuildEvent>if "$(ConfigurationName)" == "Release" ( xcopy /Y $(TargetPath) "D:\Develop\MS" )</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

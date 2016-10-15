@@ -126,6 +126,7 @@ namespace AutoIncBuildNumber
             string strAssemblyVersion = "[assembly: AssemblyVersion( \"";
             string strAssemblyFileVersion = "[assembly: AssemblyFileVersion( \"";
             string strVersionEnd = "\" )]";
+            Regex pattenAssemblyVersion = new Regex( @"^\[assembly:( )*?Assembly(File)*?Version\(( )*?""(\d+)\.(\d+)\.(\d+)\.(\d+)""( )*?\)( )*?\].*?$" );
 
             string[] lineSeparators = new string[] {"\n\r", "\r\n", "\r", "\n"};
 
@@ -177,6 +178,8 @@ namespace AutoIncBuildNumber
                     for ( int idx = 0; idx < lines.Length; idx++ )
                     {
                         string line = lines[idx];
+                        Match mo = pattenAssemblyVersion.Match(line);
+
                         if ( line.StartsWith( strAssemblyVersion ) &&
                             line.EndsWith( strVersionEnd ) )
                         {
@@ -189,6 +192,12 @@ namespace AutoIncBuildNumber
                             string strVersion = line.Substring( strAssemblyFileVersion.Length, line.Length - strAssemblyFileVersion.Length - strVersionEnd.Length );
                             lines[idx] = line.Replace( strVersion, incBuildNo( strVersion, versionPart ) );
                         }
+                        else if( mo.Length >0)
+                        {
+                            string strVersion = $"{mo.Groups[4]}.{mo.Groups[5]}.{mo.Groups[6]}.{mo.Groups[7]}";
+                            lines[idx] = line.Replace( strVersion, incBuildNo( strVersion, versionPart ) );
+                        }
+
                     }
                     if ( string.IsNullOrEmpty( lines[lines.Length - 1] ) )
                     {
