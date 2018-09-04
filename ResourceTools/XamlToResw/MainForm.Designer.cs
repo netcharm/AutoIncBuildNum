@@ -47,6 +47,7 @@
             this.edDst.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.edDst.Size = new System.Drawing.Size(586, 380);
             this.edDst.TabIndex = 0;
+            this.edDst.KeyDown += new System.Windows.Forms.KeyEventHandler(this.edDst_KeyDown);
             // 
             // btnExtract
             // 

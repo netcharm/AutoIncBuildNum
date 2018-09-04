@@ -138,10 +138,25 @@ namespace XamlToResw
                                     {
                                         attrs.Add($"{uid}.Content", attr.Value);
                                     }
+                                    else if (attr.Name.LocalName.Equals("OffContent", StringComparison.CurrentCultureIgnoreCase))
+                                    {
+                                        attrs.Add($"{uid}.OffContent", attr.Value);
+                                    }
+                                    else if (attr.Name.LocalName.Equals("OnContent", StringComparison.CurrentCultureIgnoreCase))
+                                    {
+                                        attrs.Add($"{uid}.OnContent", attr.Value);
+                                    }
                                     else if (attr.Name.LocalName.Equals("NavigationView.PaneTitle", StringComparison.CurrentCultureIgnoreCase))
                                     {
                                         attrs.Add($"{uid}.NavigationView.PaneTitle", attr.Value);
                                     }
+                                }
+                                if(!element.HasElements && 
+                                    element.Name.LocalName.Equals("String", StringComparison.CurrentCultureIgnoreCase) && 
+                                    element.Value is string 
+                                    && !string.IsNullOrEmpty(element.Value))
+                                {
+                                    attrs.Add($"{uid}.Content", element.Value);
                                 }
                                 #endregion
 
@@ -206,6 +221,13 @@ namespace XamlToResw
                 foreach (var file in files)
                 {
                     if (file.ToLower().Contains("\\obj\\")) continue;
+                    if (file.ToLower().Contains("\\bin\\")) continue;
+                    if (file.ToLower().Contains("\\properties\\")) continue;
+                    if (file.ToLower().Contains("\\strings\\")) continue;
+                    if (file.ToLower().Contains("\\assets\\")) continue;
+                    if (file.ToLower().Contains("\\multilingualresources\\")) continue;
+                    if (file.ToLower().Contains("\\snapshots\\")) continue;
+                    
                     var lines = File.ReadAllLines(file, Encoding.UTF8);
                     var resources = ParseXamlString(lines);
                     //<data name="AppName" xml:space="preserve">
@@ -241,6 +263,19 @@ namespace XamlToResw
                 }
                 edDst.Text = string.Join("\n", sb);
             }
+        }
+
+        private void edDst_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Modifiers == Keys.Control && e.KeyCode == Keys.A)
+            {
+                edDst.SelectAll();
+            }
+            //else if (e.Modifiers == Keys.Control && e.KeyCode == Keys.C)
+            //{
+            //    edDst.SelectAll();
+            //}
+
         }
     }
 }
