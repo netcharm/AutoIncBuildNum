@@ -57,38 +57,6 @@ namespace XamlToResw
             return (args.GetRange(1, args.Count - 1).ToArray());
         }
 
-        public MainForm()
-        {
-            InitializeComponent();
-        }
-
-        private void MainForm_Load(object sender, EventArgs e)
-        {
-            string[] param = ParseCommandLine(Environment.CommandLine);
-            if (param.Length > 0)
-            {
-                var files = Directory.GetFiles(param[0], "*.xaml", SearchOption.AllDirectories);
-
-                StringBuilder sb = new StringBuilder();
-                foreach (var file in files)
-                {
-                    if (file.ToLower().Contains("\\obj\\")) continue;
-                    var lines = File.ReadAllLines(file, Encoding.UTF8);
-                    var resources = ParseXamlString(lines);
-                    //<data name="AppName" xml:space="preserve">
-                    //  <value>StringCodec</value>
-                    //</data>
-                    foreach (var kv in resources)
-                    {
-                        sb.AppendLine($"  <data name=\"{ kv.Key }\" xml:space=\"preserve\">");
-                        sb.AppendLine($"    <value>{ kv.Value.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;") }</value>");
-                        sb.AppendLine($"  </data>");
-                    }
-                }
-                edDst.Text = string.Join("\n", sb);
-            }
-        }
-
         private Dictionary<string, string> ParseXamlString(string[] lines)
         {
             Dictionary<string, string> result = new Dictionary<string, string>();
@@ -96,7 +64,7 @@ namespace XamlToResw
             //System.Xml.XmlDocument xml = new System.Xml.XmlDocument();
             //xml.LoadXml(string.Join("\n", lines));
 
-            using(var ms = new MemoryStream())
+            using (var ms = new MemoryStream())
             {
                 byte[] buffer = Encoding.UTF8.GetBytes(string.Join("", lines));
                 ms.Write(buffer, 0, buffer.Length);
@@ -127,6 +95,7 @@ namespace XamlToResw
                                 var content = string.Empty;
                                 var panetitle = string.Empty;
 
+                                #region Detect UI string
                                 Dictionary<string, string> attrs = new Dictionary<string, string>();
                                 foreach (var attr in element.Attributes())
                                 {
@@ -134,7 +103,7 @@ namespace XamlToResw
                                        attr.Name.Namespace.NamespaceName.Equals("http://schemas.microsoft.com/winfx/2006/xaml", StringComparison.CurrentCultureIgnoreCase))
                                     {
                                         name = attr.Value;
-                                        if(string.IsNullOrEmpty(uid)) uid = attr.Value;
+                                        if (string.IsNullOrEmpty(uid)) uid = attr.Value;
                                     }
                                     else if (attr.Name.LocalName.Equals("Uid", StringComparison.CurrentCultureIgnoreCase) &&
                                        attr.Name.Namespace.NamespaceName.Equals("http://schemas.microsoft.com/winfx/2006/xaml", StringComparison.CurrentCultureIgnoreCase))
@@ -174,11 +143,33 @@ namespace XamlToResw
                                         attrs.Add($"{uid}.NavigationView.PaneTitle", attr.Value);
                                     }
                                 }
+                                #endregion
+
                                 if (string.IsNullOrEmpty(uid) && !string.IsNullOrEmpty(name)) uid = name;
                                 if (string.IsNullOrEmpty(uid) && string.IsNullOrEmpty(name)) continue;
 
-                                result = new List<Dictionary<string, string>>() { result, attrs }.SelectMany(dict => dict).ToDictionary(pair => pair.Key, pair => pair.Value);
+                                //result = new List<Dictionary<string, string>>() { result, attrs }.SelectMany(dict => dict).ToDictionary(pair => pair.Key, pair => pair.Value);
                                 //result = (Dictionary<string, string>)result.Concat(attrs);
+                                foreach (var kv in attrs)
+                                {
+                                    if (result.ContainsKey(kv.Key))
+                                    {
+                                        var ret = DialogResult.None;
+                                        if (rbSkipAll.Checked)
+                                            ret = DialogResult.No;
+                                        else if (rbReplaceAll.Checked)
+                                            ret = DialogResult.Yes;
+                                        else if (rbPromptAll.Checked)
+                                            ret = MessageBox.Show($"{kv.Key} existed, \n  New: {kv.Key} = {kv.Value}\n  Old: {kv.Key} = {result[kv.Key]}\n. Replace it?", "INFOMATION", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+
+                                        if (ret == DialogResult.Yes) result[kv.Key] = kv.Value;
+                                        else if (ret == DialogResult.Cancel) return(result);
+                                    }
+                                    else
+                                    {
+                                        result.Add(kv.Key, kv.Value);
+                                    }
+                                }
                             }
                         }
                     }
@@ -190,12 +181,66 @@ namespace XamlToResw
                         MessageBox.Show($"{ex.Message}, {lines[0]}", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1);
                     }
                 }
-
             }
-
-
-
             return (result);
+        }
+
+        public MainForm()
+        {
+            InitializeComponent();
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnExtract_Click(object sender, EventArgs e)
+        {
+            string[] param = ParseCommandLine(Environment.CommandLine);
+            if (param.Length > 0)
+            {
+                var files = Directory.GetFiles(param[0], "*.xaml", SearchOption.AllDirectories);
+
+                Dictionary<string, string> stringlist = new Dictionary<string, string>();
+                foreach (var file in files)
+                {
+                    if (file.ToLower().Contains("\\obj\\")) continue;
+                    var lines = File.ReadAllLines(file, Encoding.UTF8);
+                    var resources = ParseXamlString(lines);
+                    //<data name="AppName" xml:space="preserve">
+                    //  <value>StringCodec</value>
+                    //</data>                   
+                    foreach (var kv in resources)
+                    {
+                        if (stringlist.ContainsKey(kv.Key))
+                        {
+                            var ret = DialogResult.None;
+                            if (rbSkipAll.Checked)
+                                ret = DialogResult.No;
+                            else if (rbReplaceAll.Checked)
+                                ret = DialogResult.Yes;
+                            else if(rbPromptAll.Checked) 
+                                ret = MessageBox.Show($"{kv.Key} existed, \n\n  New: {kv.Key} = {kv.Value}\n  Old: {kv.Key} = {stringlist[kv.Key]}\n\nReplace it?", "INFOMATION", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+
+                            if (ret == DialogResult.Yes) stringlist[kv.Key] = kv.Value;
+                            else if (ret == DialogResult.Cancel) return;
+                        }
+                        else
+                        {
+                            stringlist.Add(kv.Key, kv.Value);
+                        }
+                    }
+                }
+                StringBuilder sb = new StringBuilder();
+                foreach (var kv in stringlist)
+                {
+                    sb.AppendLine($"  <data name=\"{ kv.Key }\" xml:space=\"preserve\">");
+                    sb.AppendLine($"    <value>{ kv.Value.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;") }</value>");
+                    sb.AppendLine($"  </data>");
+                }
+                edDst.Text = string.Join("\n", sb);
+            }
         }
     }
 }
