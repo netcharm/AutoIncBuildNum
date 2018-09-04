@@ -150,8 +150,16 @@ namespace XamlToResw
                                     {
                                         attrs.Add($"{uid}.NavigationView.PaneTitle", attr.Value);
                                     }
+                                    else if (attr.Name.LocalName.Equals("PrimaryButtonText", StringComparison.CurrentCultureIgnoreCase))
+                                    {
+                                        attrs.Add($"{uid}.PrimaryButtonText", attr.Value);
+                                    }
+                                    else if (attr.Name.LocalName.Equals("SecondaryButtonText", StringComparison.CurrentCultureIgnoreCase))
+                                    {
+                                        attrs.Add($"{uid}.SecondaryButtonText", attr.Value);
+                                    }
                                 }
-                                if(!element.HasElements && 
+                                if (!element.HasElements && 
                                     element.Name.LocalName.Equals("String", StringComparison.CurrentCultureIgnoreCase) && 
                                     element.Value is string 
                                     && !string.IsNullOrEmpty(element.Value))
