@@ -64,6 +64,9 @@ namespace AutoIncBuildNumber
                 }
                 int buildNo = Convert.ToInt32(version[version_idx]);
                 version[version_idx] = Convert.ToString( buildNo + 1 );
+                if (version_idx == 0) { version[1] = "0"; version[2] = "0"; version[3] = "0"; }
+                else if(version_idx == 1) { version[2] = "0"; version[3] = "0"; }
+                else if (version_idx == 2) { version[3] = "0"; }
                 Console.WriteLine( $"Version From: [{ strVersion }] To: [{string.Join( ".", version)}]" );
                 return ( string.Join( ".", version ) );
             }
