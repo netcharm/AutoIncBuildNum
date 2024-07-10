@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 14 for Windows Desktop
-VisualStudioVersion = 14.0.25123.0
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoIncBuildNumber", "AutoIncBuildNumber\AutoIncBuildNumber.csproj", "{5D53A2DD-BDCC-4AC7-B119-9077118DD6EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnsysLaunch", "AnsysLaunch\AnsysLaunch.csproj", "{DD0578D6-6EBB-4BAD-B6AF-DC77C0F5A26C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,8 +18,15 @@ Global
 		{5D53A2DD-BDCC-4AC7-B119-9077118DD6EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D53A2DD-BDCC-4AC7-B119-9077118DD6EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D53A2DD-BDCC-4AC7-B119-9077118DD6EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD0578D6-6EBB-4BAD-B6AF-DC77C0F5A26C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD0578D6-6EBB-4BAD-B6AF-DC77C0F5A26C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD0578D6-6EBB-4BAD-B6AF-DC77C0F5A26C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD0578D6-6EBB-4BAD-B6AF-DC77C0F5A26C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A21F16BA-87EB-40EC-A924-2752BB400978}
 	EndGlobalSection
 EndGlobal
