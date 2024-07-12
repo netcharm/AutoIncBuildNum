@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Management;
+using System.Net.NetworkInformation;
 using System.Resources;
 using System.Runtime.CompilerServices;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -44,20 +47,56 @@ namespace AnsysLaunch
             }
         }
 
+        static bool IsAdmin()
+        {
+            var identity = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
         static Process ProcessExists(string cmd, string opts)
         {
             Process result = null;
             var pname = Path.GetFileNameWithoutExtension(cmd);
-            var plist = Process.GetProcessesByName(pname);
-            foreach(var p in plist)
+
+            //var plist = Process.GetProcessesByName(pname);
+            //foreach (var p in plist)
+            //{
+            //    var pinfo = p.StartInfo;
+            //    if (pinfo.FileName.Equals(cmd, StringComparison.CurrentCultureIgnoreCase) && pinfo.Arguments.Equals(opts, StringComparison.CurrentCultureIgnoreCase))
+            //    {
+            //        result = p;
+            //        break;
+            //    }
+            //}
+
+#if DEBUG
+            string wmiQueryString = $"SELECT * FROM Win32_Process WHERE Name LIKE '%{pname}%'";
+#else
+            string wmiQueryString = $"SELECT Name,ExecutablePath,CommandLine,ProcessID FROM Win32_Process WHERE Name LIKE '%{pname}%'";
+#endif
+            using (var searcher = new ManagementObjectSearcher("root\\CIMV2", wmiQueryString))
             {
-                var pinfo = p.StartInfo;
-                if (pinfo.FileName.Equals(cmd, StringComparison.CurrentCultureIgnoreCase) && pinfo.Arguments.Equals(opts, StringComparison.CurrentCultureIgnoreCase))
+                try
                 {
-                    result = p;
-                    break;
+                    foreach (var mo in searcher.Get().Cast<ManagementObject>())
+                    {
+                        if (mo is ManagementObject)
+                        {
+                            var mo_pid = (uint)mo["ProcessID"];
+                            var mo_name = (string)mo["Name"];
+                            var mo_path = (string)mo["ExecutablePath"];
+                            var mo_args = (string)mo["CommandLine"];
+                            if (mo_name.Equals(cmd, StringComparison.CurrentCultureIgnoreCase) && mo_args.Equals(opts, StringComparison.CurrentCultureIgnoreCase))
+                            {
+                                result = Process.GetProcessById((int)mo_pid);
+                                break;
+                            }
+                        }
+                    }
                 }
-            }
+                catch { }
+            }            
             return (result);
         }
 
