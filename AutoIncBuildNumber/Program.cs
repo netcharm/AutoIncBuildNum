@@ -204,43 +204,44 @@ namespace AutoIncBuildNumber
                 if (ext.Equals(".cs") && File.Exists(assemblyInfoFile))
                 {
                     string assemblyInfo = File.ReadAllText(assemblyInfoFile, Encoding.UTF8);
-                    if (assemblyInfo.Contains("[assembly: ThemeInfo(")) continue;
-
-                    string[] lines = assemblyInfo.Split(lineSeparators, StringSplitOptions.None);
-
-                    for (int idx = 0; idx < lines.Length; idx++)
+                    if (assemblyInfo.Contains("[assembly: AssemblyVersion(") || assemblyInfo.Contains("[assembly: AssemblyFileVersion("))
                     {
-                        string line = lines[idx];
-                        Match mo = pattenAssemblyVersion.Match(line);
+                        string[] lines = assemblyInfo.Split(lineSeparators, StringSplitOptions.None);
 
-                        if (line.StartsWith(strAssemblyVersion) && line.EndsWith(strVersionEnd))
+                        for (int idx = 0; idx < lines.Length; idx++)
                         {
-                            string strVersion = line.Substring(strAssemblyVersion.Length, line.Length - strAssemblyVersion.Length - strVersionEnd.Length);
-                            lines[idx] = line.Replace(strVersion, incBuildNo(strVersion, versionPart));
+                            string line = lines[idx];
+                            Match mo = pattenAssemblyVersion.Match(line);
+
+                            if (line.StartsWith(strAssemblyVersion) && line.EndsWith(strVersionEnd))
+                            {
+                                string strVersion = line.Substring(strAssemblyVersion.Length, line.Length - strAssemblyVersion.Length - strVersionEnd.Length);
+                                lines[idx] = line.Replace(strVersion, incBuildNo(strVersion, versionPart));
+                                changed = true;
+                            }
+                            else if (line.StartsWith(strAssemblyFileVersion) && line.EndsWith(strVersionEnd))
+                            {
+                                string strVersion = line.Substring(strAssemblyFileVersion.Length, line.Length - strAssemblyFileVersion.Length - strVersionEnd.Length);
+                                lines[idx] = line.Replace(strVersion, incBuildNo(strVersion, versionPart));
+                                changed = true;
+                            }
+                            else if (mo.Length > 0)
+                            {
+                                string strVersion = $"{mo.Groups[4]}.{mo.Groups[5]}.{mo.Groups[6]}.{mo.Groups[7]}";
+                                lines[idx] = line.Replace(strVersion, incBuildNo(strVersion, versionPart));
+                                changed = true;
+                            }
+                        }
+                        if (string.IsNullOrEmpty(lines[lines.Length - 1]))
+                        {
+                            lines = string.Join("\r", lines).Trim().Split(lineSeparators, StringSplitOptions.None);
                             changed = true;
                         }
-                        else if (line.StartsWith(strAssemblyFileVersion) && line.EndsWith(strVersionEnd))
+                        if (changed)
                         {
-                            string strVersion = line.Substring(strAssemblyFileVersion.Length, line.Length - strAssemblyFileVersion.Length - strVersionEnd.Length);
-                            lines[idx] = line.Replace(strVersion, incBuildNo(strVersion, versionPart));
-                            changed = true;
+                            File.WriteAllLines(assemblyInfoFile, lines, Encoding.UTF8);
+                            break;
                         }
-                        else if (mo.Length > 0)
-                        {
-                            string strVersion = $"{mo.Groups[4]}.{mo.Groups[5]}.{mo.Groups[6]}.{mo.Groups[7]}";
-                            lines[idx] = line.Replace(strVersion, incBuildNo(strVersion, versionPart));
-                            changed = true;
-                        }
-                    }
-                    if (string.IsNullOrEmpty(lines[lines.Length - 1]))
-                    {
-                        lines = string.Join("\r", lines).Trim().Split(lineSeparators, StringSplitOptions.None);
-                        changed = true;
-                    }
-                    if (changed)
-                    {
-                        File.WriteAllLines(assemblyInfoFile, lines, Encoding.UTF8);
-                        break;
                     }
                 }
                 else if (ext.Equals(".csproj"))
@@ -288,7 +289,7 @@ namespace AutoIncBuildNumber
                         if (changed)
                         {
                             var lines = PrettifyXML(xml).Split(lineSeparators, StringSplitOptions.None);
-                            for (var i = 0; i< lines.Length; i++)
+                            for (var i = 0; i < lines.Length; i++)
                             {
                                 var line = lines[i];
                                 foreach (var tag in version_tags)
