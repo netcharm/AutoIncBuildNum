@@ -18,6 +18,7 @@ namespace AutoIncBuildNumber
 
     class Program
     {
+        private static string AppName = AppDomain.CurrentDomain.FriendlyName;
         private static string PrettifyXML(XmlDocument doc)
         {
             XmlWriterSettings settings = new XmlWriterSettings
@@ -155,6 +156,11 @@ namespace AutoIncBuildNumber
             {
                 return;
             }
+            else if (param.Length == 1 && (param[0].Equals("/?") || param[0].Equals("-?")))
+            {
+                Console.WriteLine($"Usage:{AppName} <project folder> [{VERSION_PART.MAJOR}|{VERSION_PART.MINOR}|{VERSION_PART.BUILD}|{VERSION_PART.REVISION}]");
+                return;
+            }
 
             string projectFolder = param[0].Trim(new char[] { '\"', ' ' } );
 #if DEBUG
@@ -254,6 +260,8 @@ namespace AutoIncBuildNumber
                         var xml = new XmlDocument();
                         xml.PreserveWhitespace = true;
                         xml.Load(csproj);
+
+                        if (versionPart == VERSION_PART.REVISION) versionPart = VERSION_PART.BUILD;
 
                         var targets = xml.GetElementsByTagName("TargetFramework");
                         if (targets.Count > 0)
